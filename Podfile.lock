@@ -1,0 +1,16 @@
+PODS:
+  - linphone-sdk (5.3.37)
+
+DEPENDENCIES:
+  - linphone-sdk (~> 5.3.0)
+
+SPEC REPOS:
+  https://gitlab.linphone.org/BC/public/podspec.git:
+    - linphone-sdk
+
+SPEC CHECKSUMS:
+  linphone-sdk: b736ec591f20254e27b32c155824261a5cb8d4f3
+
+PODFILE CHECKSUM: 6bc8e38f94390c90c9fb85033104fc2d483e49e6
+
+COCOAPODS: 1.15.2
