@@ -11,6 +11,9 @@
 
 import UIKit
 import linphonesw
+import AVFoundation
+import CoreVideo
+import AVKit
 
 class SecondViewController: UIViewController,CallManagerDelegate, RegistrationStateDelegate
 {
@@ -41,7 +44,10 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     @IBOutlet weak var Speaker: UIButton!
     @IBOutlet weak var Mic: UIButton!
     
+    //video call button
+    @IBOutlet weak var camera: UIButton!
     
+    //Call dutaiton lbl
     @IBOutlet weak var CallDuration: UILabel!
 
     
@@ -64,12 +70,40 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     //Registration state
     @IBOutlet weak var reglbl: UILabel!
     
-
-    var callManager = CallManager()
+    //switch Camera
+    @IBOutlet weak var SwitchCamera: UIButton!
     
+    //Show video ui 1
+    @IBOutlet weak var VideoUi: UIView!
+    
+    //Show video ui 2
+    @IBOutlet weak var VideoUi2: UIView!
+    
+    
+    var callManager = CallManager()
 
-    //ViewDidLoad func (back button log out)
-    override func viewWillDisappear(_ animated: Bool) 
+
+    //lw
+    // Video call properties
+//    private var callerVideoView: UIView?
+//    private var calleeVideoView: UIView?
+//    private var callerVideoLayer: AVCaptureVideoPreviewLayer?
+//    private var calleeVideoLayer: AVCaptureVideoPreviewLayer?
+    
+    
+    
+    //new variables for the video call
+    private var callerVideoView: UIView?
+    private var calleeVideoView: UIView?
+    private var callerVideoLayer: AVCaptureVideoPreviewLayer?
+    private var calleeVideoLayer: AVCaptureVideoPreviewLayer?
+    private var callerVideoSession: AVCaptureSession?
+    private var calleeVideoSession: AVCaptureSession?
+    
+    
+    
+    //viewWillDisappear func (back button log out)
+    override func viewWillDisappear(_ animated: Bool)
     {
         super.viewWillDisappear(animated)
            
@@ -88,6 +122,7 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     
         super.viewDidLoad()
         
+    
         //keyboard tap gesture
         let tap = UITapGestureRecognizer(target: self, action: #selector(UIInputViewController.dismissKeyboard))
         view.addGestureRecognizer(tap)
@@ -123,6 +158,14 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
             self?.updateCallStateLabel(state: state)
             
         }
+        
+        //lw
+        //setupVideoViews()
+        
+        VideoUi.isHidden = true
+        VideoUi2.isHidden = true
+        setupVideoViews()
+
     }
     
     
@@ -140,6 +183,8 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         DeclineCall.isHidden = false
         Speaker.isHidden = false
         Mic.isHidden = false
+        camera.isHidden = false
+        SwitchCamera.isHidden = false
         
         // If there's an ongoing call, terminate it
         if callManager.isCallRunning
@@ -163,6 +208,8 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
             
 //            let remote = CallSIP.text
 //            callManager.passremote(remoteAddress: remote!)
+            
+           
         }
         
         
@@ -171,26 +218,23 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         {
             CallAlert(message: "Enter SIP")
         }
-        
-        // Start call timer
-        //loga
-        //startCallTimer()
+    
         
     }
     
         //Accept call
         @IBAction func AcceptCall(_ sender: Any)
-        {
-            callManager.acceptCall()
-            print("Call Accepted..........")
-            Mic.isHidden = false
-            Speaker.isHidden = false
-            
-            //loga
-            //startCallTimer()
-
-        }
+    {
+        callManager.acceptCall()
+        print("Call Accepted..........")
+        Mic.isHidden = false
+        Speaker.isHidden = false
+        camera.isHidden = false
+        SwitchCamera.isHidden = false
         
+        logVideoSessionAndLayerStates()
+        
+    }
         //Decline call
         @IBAction func DeclineCall(_ sender: Any)
         {
@@ -241,6 +285,95 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         }
   
     
+    
+    @IBAction func camera(_ sender: UIButton)
+    {
+        if callManager.isVideoEnabled
+        {
+            callManager.toggleVideo()
+            print("aaaaa Video enable")
+          
+            // Set up AVCaptureSession when view loads
+            //setupCaptureSession()
+            
+            //Video call function call
+//            VideoUi.isHidden = false
+//            VideoUi2.isHidden = false
+            
+            
+           //lw
+            //setupVideoViews()
+
+        }
+        else
+        {
+            callManager.toggleVideo()
+            print("aaaaaa Video Disabled")
+            
+            
+//            VideoUi.isHidden = true
+//            VideoUi2.isHidden = true
+        }
+        
+        //If clicked button will get hilighted
+        sender.isSelected = !sender.isSelected
+    
+           if sender.isSelected
+        {
+          sender.backgroundColor = .blue
+        }
+        
+        else
+        {
+        sender.backgroundColor = .clear
+        }
+        
+        
+        logVideoSessionAndLayerStates()
+        
+        // Toggle the button's selected state
+        //sender.isSelected = !sender.isSelected
+        //sender.backgroundColor = sender.isSelected ? .blue : .clear
+    }
+    
+    
+    @IBAction func SwitchCamera(_ sender: UIButton)
+    {
+        callManager.toggleCamera()
+        
+        //If selected button will hilighted
+        sender.isSelected = !sender.isSelected
+    
+           if sender.isSelected
+        {
+          sender.backgroundColor = .blue
+        }
+        
+        else
+        {
+        sender.backgroundColor = .clear
+        }
+    }
+    
+    @IBAction func AddCall(_ sender: Any)
+    {
+        let participants = ["sip:4747@10.10.1.126"]
+        // Start a conference call with the participants
+               callManager.startConferenceCall(participants: participants)
+    }
+    
+    
+    @IBAction func EndGroup(_ sender: Any) 
+    {
+        callManager.endConferenceCall()
+    }
+    
+    @IBAction func merge(_ sender: Any) 
+    {
+        callManager.mergeActiveCalls()
+    }
+    
+    
     //Alert func
     func CallAlert(message: String)
     {
@@ -272,6 +405,9 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
                SecViewTwo.isHidden = false
                Mic.isHidden = true
                Speaker.isHidden = true
+               camera.isHidden = true
+               SwitchCamera.isHidden = true
+               
                
            case .OutgoingInit:
                LoginSts.text = "Outgoing call initializing"
@@ -326,27 +462,105 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
            }
        }
     
-    //OLD FUCNTION
-//    //To show the state
-//    func callStateDidChange(state: linphonesw.Call.State)
-//    {
-//         updateCallStateLabel(state: state)
-//    }
-    
+
     // Call state change handler
-    func callStateDidChange(state: linphonesw.Call.State) {
+    func callStateDidChange(state: linphonesw.Call.State) 
+    {
+        
+        logVideoSessionAndLayerStates()
         updateCallStateLabel(state: state)
-        if state == .End || state == .Released {
-            stopCallTimer() // Stop the timer when the call ends or is released
+        
+        // Show or hide VideoUi based on call state
+//        if callManager.isVideoEnabled 
+//        {
+//                // Video is enabled, start the video sessions
+//                callerVideoSession?.startRunning()
+//                calleeVideoSession?.startRunning()
+//
+//                // Show the caller and callee video views
+//                callerVideoView?.isHidden = false
+//                calleeVideoView?.isHidden = false
+//        }
+//        else 
+//        {
+//                // Video is disabled, stop the video sessions
+//                callerVideoSession?.stopRunning()
+//                calleeVideoSession?.stopRunning()
+//
+//                // Hide the caller and callee video views
+//                callerVideoView?.isHidden = true
+//                calleeVideoView?.isHidden = true
+//        }
+//        
+//        if state == .End || state == .Released 
+//        {
+//            // Stop the timer when the call ends or is released
+//            stopCallTimer()
+//        }
+        
+        if state == .Connected || state == .StreamsRunning 
+        {
+                if callManager.isVideoEnabled 
+            {
+                    // Video is enabled, start the video sessions
+                    callerVideoSession?.startRunning()
+                    calleeVideoSession?.startRunning()
+
+                    // Show the caller and callee video views
+                    callerVideoView?.isHidden = false
+                    calleeVideoView?.isHidden = false
+            }
+            else
+            {
+                    // Video is disabled, hide the video views
+                    callerVideoView?.isHidden = true
+                    calleeVideoView?.isHidden = true
+            }
+            startCallTimer()
+            }
+        else if state == .IncomingReceived || state == .OutgoingInit || state == .OutgoingProgress || state == .OutgoingRinging || state == .OutgoingEarlyMedia
+        {
+                // Call is in progress, but video is not enabled yet
+                callerVideoView?.isHidden = true
+                calleeVideoView?.isHidden = true
         }
+        else if state == .End || state == .Released
+        {
+                // Call has ended, hide the video views
+                callerVideoView?.isHidden = true
+                calleeVideoView?.isHidden = true
+
+                // Stop the timer when the call ends or is released
+                stopCallTimer()
+        }
+        else
+        {
+                // Other call states, hide the video views
+                callerVideoView?.isHidden = true
+                calleeVideoView?.isHidden = true
+        }
+        
+     
+        
     }
+    func logVideoSessionAndLayerStates() {
+        print("loga Caller video session state: \(callerVideoSession?.isRunning ?? false)")
+        print("loga Callee video session state: \(calleeVideoSession?.isRunning ?? false)")
+        print("loga Caller video layer state: \(callerVideoLayer?.isHidden ?? true)")
+        print("loga Callee video layer state: \(calleeVideoLayer?.isHidden ?? true)")
+        
+        
+        print("loga Caller video session: \(callerVideoSession.debugDescription)")
+           print("loga Callee video session: \(calleeVideoSession.debugDescription)")
+           print("loga Caller video layer: \(callerVideoLayer.debugDescription)")
+           print("loga Callee video layer: \(calleeVideoLayer.debugDescription)")
+    }
+
     
     //To show the registration state
     func registrationStateChanged(message: String, state: RegistrationState)
     {
         registrationStateDelegate?.registrationStateChanged(message: message, state: state)
-
-        
         print("Received registration state message: \(message), state: \(state)")
         
         DispatchQueue.main.async { [weak self] in
@@ -398,6 +612,120 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         timer?.invalidate()
         CallDuration.text = ""
     }
+
+
+    //MARK: To show video in the UI
+ 
     
+//    func setupVideoViews() {
+//        callerVideoView = VideoUi
+//        calleeVideoView = VideoUi2
+//
+//        // Set up the caller video layer
+//        if let callerVideoSession = callManager.callerVideoSession {
+//            callerVideoLayer = AVCaptureVideoPreviewLayer(session: callerVideoSession)
+//            callerVideoLayer?.frame = callerVideoView?.bounds ?? .zero
+//            callerVideoLayer?.videoGravity = .resizeAspectFill
+//            callerVideoView?.layer.addSublayer(callerVideoLayer!)
+//        }
+//
+//        // Set up the callee video layer
+//        if let calleeVideoSession = callManager.calleeVideoSession {
+//            calleeVideoLayer = AVCaptureVideoPreviewLayer(session: calleeVideoSession)
+//            calleeVideoLayer?.frame = calleeVideoView?.bounds ?? .zero
+//            calleeVideoLayer?.videoGravity = .resizeAspectFill
+//            calleeVideoView?.layer.addSublayer(calleeVideoLayer!)
+//        }
+//    }
+
+    //lw
+//    func setupVideoViews() {
+//        callerVideoView = VideoUi
+//        calleeVideoView = VideoUi2
+//
+//        // Set up the caller video layer
+//        if let callerVideoSession = callManager.callerVideoSession {
+//            callerVideoLayer = AVCaptureVideoPreviewLayer(session: callerVideoSession)
+//            callerVideoLayer?.frame = callerVideoView?.bounds ?? .zero
+//            callerVideoLayer?.videoGravity = .resizeAspectFill
+//            callerVideoView?.layer.addSublayer(callerVideoLayer!)
+//        }
+//
+//        // Set up the callee video layer
+//        if let calleeVideoSession = callManager.calleeVideoSession {
+//            calleeVideoLayer = AVCaptureVideoPreviewLayer(session: calleeVideoSession)
+//            calleeVideoLayer?.frame = calleeVideoView?.bounds ?? .zero
+//            calleeVideoLayer?.videoGravity = .resizeAspectFill
+//            calleeVideoView?.layer.addSublayer(calleeVideoLayer!)
+//        }
+//    }
+    
+    
+
+    //new method without uisng the wrapperclass.
+    func setupVideoViews() 
+    {
+        callerVideoView = VideoUi
+        calleeVideoView = VideoUi2
+
+        // Set up the caller video session and layer
+        callerVideoSession = AVCaptureSession()
+        callerVideoSession?.sessionPreset = .medium
+        
+        // Add the video input device
+        if let callerDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) 
+        {
+            do 
+            {
+                let callerInput = try AVCaptureDeviceInput(device: callerDevice)
+                callerVideoSession?.addInput(callerInput)
+            } 
+            catch
+            {
+                print("Error setting up caller video session: \(error)")
+            }
+        }
+        
+        // Add the video output
+        let callerVideoOutput = AVCaptureVideoDataOutput()
+        callerVideoSession?.addOutput(callerVideoOutput)
+        
+        // Create the caller video layer
+        callerVideoLayer = AVCaptureVideoPreviewLayer(session: callerVideoSession!)
+        callerVideoLayer?.frame = callerVideoView?.bounds ?? .zero
+        callerVideoLayer?.videoGravity = .resizeAspectFill
+        callerVideoView?.layer.addSublayer(callerVideoLayer!)
+
+        // Set up the callee video session and layer
+        calleeVideoSession = AVCaptureSession()
+        calleeVideoSession?.sessionPreset = .medium
+        
+        // Add the video input device
+        if let calleeDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+        {
+            do 
+            {
+                let calleeInput = try AVCaptureDeviceInput(device: calleeDevice)
+                calleeVideoSession?.addInput(calleeInput)
+            } 
+            catch
+            {
+                print("Error setting up callee video session: \(error)")
+            }
+        }
+        
+        // Add the video output
+        let calleeVideoOutput = AVCaptureVideoDataOutput()
+        calleeVideoSession?.addOutput(calleeVideoOutput)
+        
+        // Create the callee video layer
+        calleeVideoLayer = AVCaptureVideoPreviewLayer(session: calleeVideoSession!)
+        calleeVideoLayer?.frame = calleeVideoView?.bounds ?? .zero
+        calleeVideoLayer?.videoGravity = .resizeAspectFill
+        calleeVideoView?.layer.addSublayer(calleeVideoLayer!)
+        
+        
+        logVideoSessionAndLayerStates()
     }
+}
 
