@@ -122,6 +122,8 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     
         super.viewDidLoad()
         
+        
+        
     
         //keyboard tap gesture
         let tap = UITapGestureRecognizer(target: self, action: #selector(UIInputViewController.dismissKeyboard))
@@ -281,7 +283,6 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
             {
             sender.backgroundColor = .clear
             }
-            
         }
   
     
@@ -723,7 +724,6 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         calleeVideoLayer?.frame = calleeVideoView?.bounds ?? .zero
         calleeVideoLayer?.videoGravity = .resizeAspectFill
         calleeVideoView?.layer.addSublayer(calleeVideoLayer!)
-        
         
         logVideoSessionAndLayerStates()
     }
