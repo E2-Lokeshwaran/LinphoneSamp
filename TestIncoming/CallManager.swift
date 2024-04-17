@@ -73,8 +73,11 @@ class CallManager {
     
     
     //video return
-
     var activeCalls: [Call] = []
+
+    
+    var localvideo = UIView()
+    var remotevideo = UIView()
 
     
     //init
@@ -157,9 +160,10 @@ class CallManager {
                 self.loggedIn = (state == .Ok)
             })
             mCore.addDelegate(delegate: mCoreDelegate)
+            
+            
+           
         }
-        
-        
         
         catch
         {
@@ -652,7 +656,6 @@ class CallManager {
             }
 
             // Merge the calls into a conference
-            mergeActiveCalls()
         }
 
         // Method to merge active calls into a conference
@@ -679,70 +682,77 @@ class CallManager {
 //        }
 
         // Method to end the conference call
-    func endConferenceCall() 
-    {
-           // Ensure there is an active conference to end
-           guard mCore.conference != nil else 
-        {
-               print("No active conference to end")
-               return
-           }
-
-           do {
-               // Leave the conference
-               try mCore.leaveConference()
-               print("Left the conference")
-
-               // Terminate each call in the conference
-               for call in activeCalls {
-                   try call.terminate()
-               }
-
-               // Clear the list of active calls
-               activeCalls.removeAll()
-           } catch {
-               print("Failed to end conference call: \(error.localizedDescription)")
-           }
-       }
+//    func endConferenceCall() 
+//    {
+//           // Ensure there is an active conference to end
+//           guard mCore.conference != nil else 
+//        {
+//               print("No active conference to end")
+//               return
+//           }
+//
+//           do {
+//               // Leave the conference
+//               try mCore.leaveConference()
+//               print("Left the conference")
+//
+//               // Terminate each call in the conference
+//               for call in activeCalls {
+//                   try call.terminate()
+//               }
+//
+//               // Clear the list of active calls
+//               activeCalls.removeAll()
+//           } catch {
+//               print("Failed to end conference call: \(error.localizedDescription)")
+//           }
+//       }
+//
+//    
+//    func mergeActiveCalls() {
+//            // Filter and check calls that are in the correct state to be merged
+//            let callsToMerge = mCore.calls.filter { $0.state == .StreamsRunning }
+//            
+//            // Ensure there are at least two active calls to merge
+//            guard callsToMerge.count >= 2 else {
+//                print("Not enough active calls to merge")
+//                return
+//            }
+//            
+//            do {
+//                // Check if a conference is already active
+//                if mCore.conference != nil {
+//                    // Conference is active, so add calls to the existing conference
+//                    for call in callsToMerge {
+//                        if call.conference == nil {
+//                            // Call is not in the conference yet, so add it
+//                            try mCore.addToConference(call: call)
+//                        }
+//                    }
+//                    print("Calls added to existing conference")
+//                } else {
+//                    // No active conference, so create a new conference
+//                    try mCore.enterConference()
+//                    print("Created a new conference and added calls")
+//                }
+//            } catch {
+//                print("Error merging calls: \(error.localizedDescription)")
+//            }
+//        }
+//
+//        // Method to handle the merge call button press event
+//        func onMergeCallButtonPressed() {
+//            // Call the method to merge active calls
+//            mergeActiveCalls()
+//        }
 
     
-    func mergeActiveCalls() {
-            // Filter and check calls that are in the correct state to be merged
-            let callsToMerge = mCore.calls.filter { $0.state == .StreamsRunning }
-            
-            // Ensure there are at least two active calls to merge
-            guard callsToMerge.count >= 2 else {
-                print("Not enough active calls to merge")
-                return
-            }
-            
-            do {
-                // Check if a conference is already active
-                if mCore.conference != nil {
-                    // Conference is active, so add calls to the existing conference
-                    for call in callsToMerge {
-                        if call.conference == nil {
-                            // Call is not in the conference yet, so add it
-                            try mCore.addToConference(call: call)
-                        }
-                    }
-                    print("Calls added to existing conference")
-                } else {
-                    // No active conference, so create a new conference
-                    try mCore.enterConference()
-                    print("Created a new conference and added calls")
-                }
-            } catch {
-                print("Error merging calls: \(error.localizedDescription)")
-            }
-        }
-
-        // Method to handle the merge call button press event
-        func onMergeCallButtonPressed() {
-            // Call the method to merge active calls
-            mergeActiveCalls()
-        }
-
+    
+    func vcall()
+    {
+        
+    }
+    
     
    }
 

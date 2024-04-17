@@ -207,33 +207,6 @@
                                             <action selector="camera:" destination="IxD-L3-aIz" eventType="touchUpInside" id="xXp-Wk-ZWo"/>
                                         </connections>
                                     </button>
-                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Y3j-vs-4Ud">
-                                        <rect key="frame" x="118" y="42" width="88" height="35"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="filled" title="Add Call"/>
-                                        <connections>
-                                            <action selector="AddCall:" destination="IxD-L3-aIz" eventType="touchUpInside" id="Wgf-1u-deB"/>
-                                        </connections>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="M3v-kR-4PK">
-                                        <rect key="frame" x="119" y="132" width="86" height="35"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="filled" title="End Call"/>
-                                        <connections>
-                                            <action selector="EndGroup:" destination="IxD-L3-aIz" eventType="touchUpInside" id="I5c-A4-xOd"/>
-                                        </connections>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gdQ-LG-ekX">
-                                        <rect key="frame" x="126" y="218" width="73" height="35"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="filled" title="Merge"/>
-                                        <connections>
-                                            <action selector="merge:" destination="IxD-L3-aIz" eventType="touchUpInside" id="kde-yo-5RB"/>
-                                        </connections>
-                                    </button>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemGray5Color"/>
                             </view>
