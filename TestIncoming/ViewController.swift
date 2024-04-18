@@ -11,10 +11,9 @@ import linphonesw
 class ViewController: UIViewController
 {
     
-   
     var registrationStateMessage: String?
     var callManager = CallManager()
-    // MARK: - Outlets
+    
     
     //Login
     @IBOutlet weak var usernameTextField: UITextField!
@@ -34,43 +33,28 @@ class ViewController: UIViewController
 
     @IBOutlet weak var lbl: UILabel!
 
-    
-    // MARK: - View Controller Lifecycle
-    
-    var tutorialContext = CallManager()
-    
+        
     override func viewDidLoad() 
     {
         super.viewDidLoad()
         
-       
-            //keyboard invisible declare
+        // Create a UITapGestureRecognizer instance named tap, specifying the target and action to be performed when the tap gesture is recognized.
+        // When a tap gesture is recognized, it will call the dismissKeyboard method on the UIInputViewController instance represented by 'self'.
+        // This effectively dismisses the keyboard when tapping outside of any input elements.
         let tap = UITapGestureRecognizer(target: self, action: #selector(UIInputViewController.dismissKeyboard))
+        // Add the tap gesture recognizer to the view, enabling it to detect taps on the view and trigger the associated action.
         view.addGestureRecognizer(tap)
 
         
         //View corner radius
         ViewOne.layer.cornerRadius = 20
         
-        //UserDefaut
-        if let savedUsername = UserDefaults.standard.string(forKey: "username"),
-              let savedPassword = UserDefaults.standard.string(forKey: "password"),
-              let savedDomain = UserDefaults.standard.string(forKey: "domain") 
-        {
-               // Configure your CallManager with the saved data
-               callManager.username = savedUsername
-               callManager.passwd = savedPassword
-               callManager.domain = savedDomain
-               
-           }
     }
     
-   
-
     
     // MARK: - IBActions
     
-    //keyboard invisible func
+    //keyboard invisible
     @objc func dismissKeyboard()
     {
         view.endEditing(true)
@@ -79,14 +63,13 @@ class ViewController: UIViewController
     @IBAction func loginButtonTapped(_ sender: UIButton) 
     {
         //logout
-        if tutorialContext.loggedIn
+        if callManager.loggedIn
         {
-            tutorialContext.unregister()
-            tutorialContext.delete()
+            callManager.unregister()
+            callManager.delete()
             print("logout")
         }
- 
-        
+
         else {
             // Check if all details are entered
             guard let username = usernameTextField.text,
@@ -100,19 +83,39 @@ class ViewController: UIViewController
                 return
             }
 
-            
             // Attempt login
-                   attemptLogin(username: username, password: password, domain: domain)
-            
-            tutorialContext.setUserCredentials(username: username, password: password, domain: domain)
+            attemptLogin(username: username, password: password, domain: domain)
+            callManager.setUserCredentials(username: username, password: password, domain: domain)
+    
+            callManager.login()
+        }
+    }
+    
+   
 
-            
-            tutorialContext.login()
+    //MARK: - Segent ctrl
+    
+    @IBAction func transportSegmentedControlChanged(_ sender: UISegmentedControl) {
+        let selectedTransport = sender.titleForSegment(at: sender.selectedSegmentIndex) ?? ""
+        callManager.transportType = selectedTransport
+    }
+    
+    //MARK: - Navigate to next page (SecondViewController)
+
+    func navigateToNextPage() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        if let nextViewController = storyboard.instantiateViewController(withIdentifier: "SecondViewController") as? SecondViewController {
+            nextViewController.receivedData = usernameTextField.text
+            nextViewController.sipadd = domainTextField.text
+            //staus label
+            nextViewController.callManager = callManager
+            navigationController?.pushViewController(nextViewController, animated: true)
             
         }
     }
     
-    func attemptLogin(username: String, password: String, domain: String) {
+    func attemptLogin(username: String, password: String, domain: String)
+    {
         UserDefaults.standard.set(username, forKey: "username")
         UserDefaults.standard.set(password, forKey: "password")
         UserDefaults.standard.set(domain, forKey: "domain")
@@ -120,33 +123,9 @@ class ViewController: UIViewController
         // Navigate to the next page
         navigateToNextPage()
     }
-
     
-    //segment ctrl
-    @IBAction func transportSegmentedControlChanged(_ sender: UISegmentedControl) {
-        let selectedTransport = sender.titleForSegment(at: sender.selectedSegmentIndex) ?? ""
-        tutorialContext.transportType = selectedTransport
-    }
+    //MARK: - Login Alert
     
-
-    //Navigate func
-    func navigateToNextPage() {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        if let nextViewController = storyboard.instantiateViewController(withIdentifier: "SecondViewController") as? SecondViewController {
-            nextViewController.receivedData = usernameTextField.text
-            nextViewController.sipadd = domainTextField.text
-            //staus label
-            nextViewController.callManager = tutorialContext
-            navigationController?.pushViewController(nextViewController, animated: true)
-            
-//            let secondViewController = SecondViewController()
-//            secondViewController.callManager = callMan
-            
-        }
-    }
-    
-    
-    //Alert func
     func alert(message: String)
     {
         let alert = UIAlertController(title: "Alert", message: "Check Details", preferredStyle: .alert)

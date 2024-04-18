@@ -22,25 +22,24 @@ protocol RegistrationStateDelegate: AnyObject
     func registrationStateChanged(message: String, state: RegistrationState)
 }
 
-
 class CallManager {
     
-    //Reg
+    //Registration sate
     weak var registrationStateDelegate: RegistrationStateDelegate?
     
     weak var SecondVc : SecondViewController?
     weak var delegate: CallManagerDelegate?
     weak var vc : ViewController?
     
+    //call state
     var callStateDidChange: ((Call.State) -> Void)?
     
+    //for speaker toggle
     let audioSession = AVAudioSession.sharedInstance()
     
-    //video variables
-      var callerVideoSession: AVCaptureSession?
-      var calleeVideoSession: AVCaptureSession?
     
     var mCore: Core!
+    var call: Call?
     var mAccount: Account?
     var mCoreDelegate: CoreDelegate!
     
@@ -67,23 +66,11 @@ class CallManager {
     var incomingRemoteAddress: String = "Nobody yet"
     
     //Video call variables
-    var call: Call?
     var isVideoEnabled: Bool = false
     
-    
-    
-    //video return
-    var activeCalls: [Call] = []
 
-    
-    var localvideo = UIView()
-    var remotevideo = UIView()
-
-    
-    //init
     init()
     {
-        
         
         LoggingService.Instance.logLevel = LogLevel.Debug
         
@@ -116,6 +103,8 @@ class CallManager {
                     self.isVideoEnabled = call.currentParams?.videoEnabled ?? false
                     self.canChangeCamera = core.videoDevicesList.count > 2
                     //print("  call is connecting1")
+                    print("CallDuration", call.duration)
+
                 }
                 
                 else if (state == .Released)
@@ -152,8 +141,6 @@ class CallManager {
                     print("find me call disconnected")
                 }
                 
-               
-                
                 self.callMsg = message
             }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
                 NSLog("New registration state is \(state) for user id \(String(describing: account.params?.identityAddress?.asString()))\n")
@@ -161,8 +148,7 @@ class CallManager {
             })
             mCore.addDelegate(delegate: mCoreDelegate)
             
-            
-           
+
         }
         
         catch
@@ -170,11 +156,9 @@ class CallManager {
             print(error.localizedDescription)
         }
         
-        
-        
     }
+    //MARK: - Login
     
-    //Login
     func login()
     {
         mCoreDelegate = CoreDelegateStub(onAccountRegistrationStateChanged: { [weak self] (core: Core, account: Account, state: RegistrationState, message: String) in
@@ -197,6 +181,7 @@ class CallManager {
         
         //User selecting the type of security layer.
         do {
+            //selection transport layer
             var transport: TransportType
             if (transportType == "TLS")
             {
@@ -245,85 +230,97 @@ class CallManager {
             print(error.localizedDescription)
         }
     }
+    //MARK: - Unregister user
     
-    //Unregister
     func unregister()
     {
+        // Check if there is a non-nil value assigned to the variable mCore.defaultAccount.
         if let account = mCore.defaultAccount
         {
+            // Assign the value of account.params to a new constant named params.
             let params = account.params
+            // Clone the params object if it's not nil and assign the cloned object to clonedParams.
             let clonedParams = params?.clone()
+            // If clonedParams is not nil, set its registerEnabled property to false.
             clonedParams?.registerEnabled = false
+            // Update the params property of the account with the clonedParams object.
             account.params = clonedParams
         }
     }
     
-    
-    //Delete
+    //MARK: - Delete user
+
     func delete()
     {
         if let account = mCore.defaultAccount
         {
+            // Remove the specified account from the mCore.
             mCore.removeAccount(account: account)
+            //Clear all accouts from mCore
             mCore.clearAccounts()
+            //Clear all authentication information from the mCore
             mCore.clearAllAuthInfo()
         }
     }
+    //MARK: - Outgoing call
     
-    
-    //Outgoing call func
     func outgoingCall()
     {
         do
         {
+            // Create a remote address using Factory.Instance.createAddress, and assign it to the constant remoteAddress. The remoteAddress is obtained from a variable named remoteAddress, presumably defined elsewhere.
             let remoteAddress = try Factory.Instance.createAddress(addr: remoteAddress)
+            // Create call parameters using mCore.createCallParams with a nil call argument, and assign them to the constant params.
             let params = try mCore.createCallParams(call: nil)
+            // Set the mediaEncryption property of the params object to MediaEncryption.None.
             params.mediaEncryption = MediaEncryption.None
+            // Initiate an outgoing call using mCore.inviteAddressWithParams with the remoteAddress and params objects.
             let _ = mCore.inviteAddressWithParams(addr: remoteAddress, params: params)
         }
         catch
         {
+            // Print the localized description of the error.
             print(error.localizedDescription)
         }
-        print("find me **",remoteAddress)
     }
+    //MARK: - Terminate call
     
-    
-    //Terminate call
     func terminateCall()
     {
         do
         {
+            // Check if there are no active calls in mCore.
             if (mCore.callsNb == 0)
             {
+                // Exit the function early if there are no active calls.
                 return
             }
+            // Attempt to terminate the current call using mCore.currentCall?.terminate(). If there is no current call, this line does nothing.
             try mCore.currentCall?.terminate()
         }
         catch
         {
+            // Print the localized description of the error.
             print(error.localizedDescription)
         }
     }
+    //MARK: - Accept call
     
-    
-    //Accept call
     func acceptCall()
     {
-        // IMPORTANT : Make sure you allowed the use of the microphone (see key "Privacy - Microphone usage description" in Info.plist) !
         do {
-            // if we wanted, we could create a CallParams object
-            // and answer using this object to make changes to the call configuration
-            // (see OutgoingCall tutorial)
+            // Attempt to accept the current call using mCore.currentCall?.accept(). If there is no current call, this line does nothing.
             try mCore.currentCall?.accept()
         }
         catch
-        { NSLog(error.localizedDescription)
+        { 
+            // Log the localized description of the error using NSLog.
+            NSLog(error.localizedDescription)
         }
     }
     
+    //MARK: - Mute & Unmute
     
-    //Mic mute & unmute
     func muteMicrophone()
     {
         // The following toggles the microphone, disabling completely / enabling the sound capture
@@ -332,27 +329,16 @@ class CallManager {
         isMicrophoneEnabled = !isMicrophoneEnabled
     }
     
+    //MARK: - Toggle video (on or off video)
     
-    //Switch video
     func toggleVideo()
     {
-        //        do {
-        //            if (mCore.callsNb == 0) { return }
-        //            if let call = mCore.currentCall {
-        //                let params = try mCore.createCallParams(call: call)
-        //                params.videoEnabled = !(call.currentParams!.videoEnabled)
-        //                try call.update(params: params)
-        //            }
-        //        }
-        //        catch
-        //        {
-        //            print(error.localizedDescription)
-        //        }
         
-        //This function works and old fucntion
         do {
             // Check if there's an ongoing call
-            guard let call = mCore.currentCall else {
+            guard let call = mCore.currentCall 
+            else
+            {
                 print("No ongoing call")
                 return
             }
@@ -365,36 +351,27 @@ class CallManager {
             
             // Update call parameters
             try call.update(params: params)
-        } catch {
+        } 
+        catch
+        {
             print("Error toggling video: \(error.localizedDescription)")
         }
         
-        if isVideoEnabled {
-                isVideoEnabled = false
-                stopVideoCaptureSessions()
-            } else {
-                isVideoEnabled = true
-                setupVideoCaptureSessions()
-                startVideoCaptureSessions()
-            }
+        if isVideoEnabled
+        {
+            isVideoEnabled = false
+        }
+        
+        else
+        {
+            isVideoEnabled = true
+        }
     }
     
-    
-    //Switch camera
+    //MARK: - Switch camera (front or back camera)
+     
     func toggleCamera()
     {
-        //        do {
-        //            let currentDevice = mCore.videoDevice
-        //            for camera in mCore.videoDevicesList {
-        //                if (camera != currentDevice && camera != "StaticImage: Static picture") {
-        //                    try mCore.setVideodevice(newValue: camera)
-        //                    break
-        //                }
-        //            }
-        //        } catch { print(error.localizedDescription) }
-        
-        
-        //This function works and old function
         do {
             // Get available video devices
             let devices = mCore.videoDevicesList
@@ -410,17 +387,12 @@ class CallManager {
         }
         catch
         {
-            
             print("Error toggling camera: \(error.localizedDescription)")
         }
-        
-        
-        
     }
     
+    //MARK: - Pause or resume
     
-    
-    //Pause or resume
     func pauseOrResume()
     {
         do {
@@ -432,9 +404,14 @@ class CallManager {
                     try call.resume()
                 }
             }
-        } catch { print(error.localizedDescription) }
+        } 
+        catch
+        {
+            print(error.localizedDescription)
+        }
     }
     
+    //MARK: - Toggle Speaker
     
     //Speaker
     func toggleSpeaker()
@@ -468,293 +445,10 @@ class CallManager {
     {
         self.remoteAddress = remoteAddress
     }
-    
-    
-    //MARK: Video call
-    //NOTE: Changed toggle video and toggle camera
-    
-    // Method to initiate outgoing video call
-    func outgoingVideoCall(remoteAddress: String)
-    {
-        if let address = try? mCore.createAddress(address: remoteAddress) {
-            do {
-                // Create call parameters
-                let params = try mCore.createCallParams(call: nil)
-                
-                // Enable video
-                params.videoEnabled = true
-                
-                // Initiate outgoing call
-                let _ = mCore.inviteAddressWithParams(addr: address, params: params)
-            } catch {
-                print("Error initiating outgoing video call: \(error.localizedDescription)")
-            }
-        } else {
-            print("Invalid remote address: \(remoteAddress)")
-        }
-    }
-    
-    
-    // Method to accept incoming video call
-    func acceptVideoCall()
-    {
-        do
-        {
-            // Ensure microphone permission is allowed in Info.plist
-            try mCore.currentCall?.accept()
-        }
-        catch
-        {
-            print("Error accepting incoming video call: \(error.localizedDescription)")
-        }
-    }
-    
-    
-    // Method to set the local video layer
-    // Set up the video capture sessions
-    func setupVideoCaptureSessions() {
-        // Create the caller video session
-        callerVideoSession = AVCaptureSession()
-        callerVideoSession?.sessionPreset = .high
 
-        // Create the callee video session
-        calleeVideoSession = AVCaptureSession()
-        calleeVideoSession?.sessionPreset = .high
-        
-        print("lokesh Setting up video capture sessions...")
+}
 
-    }
 
-    // Start the video capture sessions
-    func startVideoCaptureSessions() {
-        if let callerVideoSession = callerVideoSession {
-            callerVideoSession.startRunning()
-        }
-
-        if let calleeVideoSession = calleeVideoSession {
-            calleeVideoSession.startRunning()
-        }
-        print("lokesh Setting up video capture sessions...")
-
-    }
-
-    // Stop the video capture sessions
-    func stopVideoCaptureSessions() {
-        if let callerVideoSession = callerVideoSession {
-            callerVideoSession.stopRunning()
-        }
-
-        if let calleeVideoSession = calleeVideoSession {
-            calleeVideoSession.stopRunning()
-        }
-    }
-    
-//    var callerVideoSession: AVCaptureSession? 
-//    {
-//        return self.callerVideoSession
-//    }
-//
-//    var calleeVideoSession: AVCaptureSession? 
-//    {
-//        return self.calleeVideoSession
-//    }
-    
-    
-    //MARK: - Group call feature
-    
-    // old working methods
-    // Method to start a conference call
-//        func startConferenceCall(participants: [String]) {
-//            // Start calls with each participant
-//            for participant in participants {
-//                // Create an address for the participant
-//                guard let address = try? mCore.createAddress(address: participant) else {
-//                    print("Invalid address: \(participant)")
-//                    continue
-//                }
-//
-//                // Create call parameters
-//                guard let params = try? mCore.createCallParams(call: nil) else {
-//                    print("Failed to create call parameters")
-//                    continue
-//                }
-//                
-//                // Set media encryption type
-//                params.mediaEncryption = MediaEncryption.None
-//                
-//                // Start the call with the participant
-//                if let call = mCore.inviteAddressWithParams(addr: address, params: params) {
-//                    // Add the call to the list of active calls
-//                    activeCalls.append(call)
-//                } else {
-//                    print("Failed to start call with: \(participant)")
-//                }
-//            }
-//
-//            // Merge calls into a conference
-//            if activeCalls.count > 1 {
-//                // Merge the calls into a conference using Linphone's API
-//                do {
-//                    try mCore.enterConference()
-//                    print("Conference call started")
-//                } catch {
-//                    print("Failed to merge calls into a conference: \(error.localizedDescription)")
-//                }
-//            } else {
-//                print("Not enough calls to merge into a conference")
-//            }
-//        }
-//
-//        // Method to end the conference call
-//        func endConferenceCall() {
-//            do {
-//                // Leave the conference
-//                try mCore.leaveConference()
-//                print("Left the conference")
-//
-//                // Terminate each call in the conference
-//                for call in activeCalls {
-//                    try call.terminate()
-//                }
-//
-//                // Clear the list of active calls
-//                activeCalls.removeAll()
-//            } catch {
-//                print("Failed to end conference call: \(error.localizedDescription)")
-//            }
-//        }
-
-    // new method for group call
-    
-    // Method to start a conference call
-        func startConferenceCall(participants: [String]) {
-            // Start calls with each participant
-            for participant in participants {
-                // Create an address for the participant
-                guard let address = try? mCore.createAddress(address: participant) else {
-                    print("Invalid address: \(participant)")
-                    continue
-                }
-
-                // Create call parameters
-                guard let params = try? mCore.createCallParams(call: nil) else {
-                    print("Failed to create call parameters")
-                    continue
-                }
-
-                // Set media encryption type
-                params.mediaEncryption = MediaEncryption.None
-
-                // Start the call with the participant
-                guard let call = mCore.inviteAddressWithParams(addr: address, params: params) else {
-                    print("Failed to start call with: \(participant)")
-                    continue
-                }
-
-                // Add the call to the list of active calls
-                activeCalls.append(call)
-            }
-
-            // Merge the calls into a conference
-        }
-
-        // Method to merge active calls into a conference
-//    func mergeActiveCallsIntoConference() {
-//            // First, check if there are enough active calls
-//            guard activeCalls.count >= 2 else {
-//                print("Not enough active calls to merge into a conference")
-//                return
-//            }
-//
-//            // Ensure all calls are in connected state before merging
-//            guard activeCalls.allSatisfy({ $0.state == .StreamsRunning }) else {
-//                print("Not all active calls are connected")
-//                return
-//            }
-//
-//            // Try merging the active calls
-//            do {
-//                try mCore.enterConference()
-//                print("Calls merged into conference successfully")
-//            } catch {
-//                print("Failed to merge calls into conference: \(error.localizedDescription)")
-//            }
-//        }
-
-        // Method to end the conference call
-//    func endConferenceCall() 
-//    {
-//           // Ensure there is an active conference to end
-//           guard mCore.conference != nil else 
-//        {
-//               print("No active conference to end")
-//               return
-//           }
-//
-//           do {
-//               // Leave the conference
-//               try mCore.leaveConference()
-//               print("Left the conference")
-//
-//               // Terminate each call in the conference
-//               for call in activeCalls {
-//                   try call.terminate()
-//               }
-//
-//               // Clear the list of active calls
-//               activeCalls.removeAll()
-//           } catch {
-//               print("Failed to end conference call: \(error.localizedDescription)")
-//           }
-//       }
-//
-//    
-//    func mergeActiveCalls() {
-//            // Filter and check calls that are in the correct state to be merged
-//            let callsToMerge = mCore.calls.filter { $0.state == .StreamsRunning }
-//            
-//            // Ensure there are at least two active calls to merge
-//            guard callsToMerge.count >= 2 else {
-//                print("Not enough active calls to merge")
-//                return
-//            }
-//            
-//            do {
-//                // Check if a conference is already active
-//                if mCore.conference != nil {
-//                    // Conference is active, so add calls to the existing conference
-//                    for call in callsToMerge {
-//                        if call.conference == nil {
-//                            // Call is not in the conference yet, so add it
-//                            try mCore.addToConference(call: call)
-//                        }
-//                    }
-//                    print("Calls added to existing conference")
-//                } else {
-//                    // No active conference, so create a new conference
-//                    try mCore.enterConference()
-//                    print("Created a new conference and added calls")
-//                }
-//            } catch {
-//                print("Error merging calls: \(error.localizedDescription)")
-//            }
-//        }
-//
-//        // Method to handle the merge call button press event
-//        func onMergeCallButtonPressed() {
-//            // Call the method to merge active calls
-//            mergeActiveCalls()
-//        }
-
-    
-    
-    func vcall()
-    {
-        
-    }
-    
-    
-   }
 
 
    

@@ -9417,7 +9417,8 @@ public class Call : LinphoneObject
 		
 	
 	/// Returns call's duration in seconds. 
-	/// - Returns: the call's duration in seconds. 
+    /// CallDutraion
+	/// - Returns: the call's duration in seconds.
 	public var duration: Int
 	{
 	
