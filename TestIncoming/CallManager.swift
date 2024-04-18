@@ -5,7 +5,6 @@
 //  Created by Lokeshwaran on 01/04/24.
 //
 
-
 import linphonesw
 import AVFoundation
 import CallKit
@@ -67,6 +66,22 @@ class CallManager {
     
     //Video call variables
     var isVideoEnabled: Bool = false
+    
+    //Property to store call duration
+    var callDuration: TimeInterval = 0
+    
+    //Method to update the call duration
+    func updateCallDuration(duration: TimeInterval)
+    {
+        callDuration = duration
+    }
+    
+    
+    //Method to retrieve the call duration
+    func getCallDuration() -> TimeInterval
+    {
+        return callDuration
+    }
     
 
     init()
@@ -158,8 +173,7 @@ class CallManager {
         
     }
     //MARK: - Login
-    
-    func login()
+    func login(completion: @escaping (Bool) -> Void)
     {
         mCoreDelegate = CoreDelegateStub(onAccountRegistrationStateChanged: { [weak self] (core: Core, account: Account, state: RegistrationState, message: String) in
             // Print the registration state and associated message
@@ -168,13 +182,16 @@ class CallManager {
             self?.loggedIn = (state == .Ok)
             
             self?.registrationStateDelegate?.registrationStateChanged(message: message, state: state)
-            
-            
             //To print the status and the message of the log in user.
             let bcd = message
             let xyz = state
-            print("waran(msg)--->",bcd)
-            print("waran11(sts)--->",xyz)
+            print("msg--->",bcd)
+            print("stss--->",xyz)
+            
+            
+            // Call the completion handler with the login success status
+            completion(state == .Ok)
+
             
         })
         mCore.addDelegate(delegate: mCoreDelegate)
