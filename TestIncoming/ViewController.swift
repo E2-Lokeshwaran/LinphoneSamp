@@ -24,17 +24,34 @@ class ViewController: UIViewController,RegistrationStateDelegate
     //UIview
     @IBOutlet weak var ViewOne: UIView!
     @IBOutlet weak var lbl: UILabel!
-
-    
-    @IBOutlet weak var AfterRegister: UIButton!
     
     //var registrationStateMessage: String?
     var callManager = CallManager()
     
+    
+    var registrationMessage: String?
+    var isRegistrationStateHandled = false
+    
+    var shouldResetCallManager = false
+
     weak var registrationStateDelegate: RegistrationStateDelegate?
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
-    override func viewDidLoad() 
+        // Reset callManager if needed
+            if shouldResetCallManager {
+                callManager = CallManager()
+                callManager.registrationStateDelegate = self
+                shouldResetCallManager = false
+            }
+
+            isRegistrationStateHandled = false
+
+            cleardata()
+    }
+    
+    override func viewDidLoad()
     {
         super.viewDidLoad()
         // Create a UITapGestureRecognizer instance named tap, specifying the target and action to be performed when the tap gesture is recognized.
@@ -48,15 +65,6 @@ class ViewController: UIViewController,RegistrationStateDelegate
         
         callManager.registrationStateDelegate = self
         
-//        if lbl.text == "Registration successful"
-//        {
-//            AfterRegister.isHidden = false
-//        }
-//        else
-//        {
-//            AfterRegister.isHidden = true
-//        }
-
     }
     //Function to dismiss the keyboard when tapped outside of a text field
     @objc func dismissKeyboard()
@@ -68,12 +76,17 @@ class ViewController: UIViewController,RegistrationStateDelegate
     //MARK: - Login Button
     @IBAction func loginButtonTapped(_ sender: UIButton)
     {
+        isRegistrationStateHandled = false
+        lbl.text = ""
+        
         //logout
         if callManager.loggedIn
         {
             callManager.unregister()
             callManager.delete()
+            shouldResetCallManager = true
             print("logout")
+            return
         }
         else
         {
@@ -92,33 +105,13 @@ class ViewController: UIViewController,RegistrationStateDelegate
             }
             // Attempt login
             //attemptLogin(username: username, password: password, domain: domain)
+                        
             callManager.setUserCredentials(username: username, password: password, domain: domain)
-            
-            //callManager.login()
-            
-            // Login and navigate to next page only if registration status is "OK"
-            callManager.login { [weak self] success in
-//                        if success {
-//                            // Check registration status
-//                            if self?.callManager.loggedIn ?? false {
-//                                // Navigate to next page
-//                                self?.navigateToNextPage()
-//                            } else {
-//                                // Show error message if login fails
-//                                self?.showAlert(message: "1Login failed. Please check your credentials.")
-//                            }
-//                        } else {
-//                            // Show error message if login fails
-//                            self?.showAlert(message: "2Login failed. Please check your credentials.")
-//                        }
-                    }
-            
-            
-         
+            callManager.login()
         }
     }
-        
-    //MARK: - Segent ctrl
+    
+    //MARK: - Segement controller
     
     @IBAction func transportSegmentedControlChanged(_ sender: UISegmentedControl)
     {
@@ -126,24 +119,30 @@ class ViewController: UIViewController,RegistrationStateDelegate
         callManager.transportType = selectedTransport
     }
     //MARK: - Navigate to next page (SecondViewController)
-    func navigateToNextPage() {
+    func navigateToNextPage()
+    {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         if let nextViewController = storyboard.instantiateViewController(withIdentifier: "SecondViewController") as? SecondViewController {
             nextViewController.receivedData = usernameTextField.text
             nextViewController.sipadd = domainTextField.text
             //staus label
             nextViewController.callManager = callManager
+            nextViewController.registrationStateDelegate = self // Set the delegate
             navigationController?.pushViewController(nextViewController, animated: true)
+            
+            self.isRegistrationStateHandled = true
+            
         }
     }
-//    func attemptLogin(username: String, password: String, domain: String)
-//    {
-//        UserDefaults.standard.set(username, forKey: "username")
-//        UserDefaults.standard.set(password, forKey: "password")
-//        UserDefaults.standard.set(domain, forKey: "domain")
-//        // Navigate to the next page
-//        navigateToNextPage()
-//    }
+    
+    //        func attemptLogin(username: String, password: String, domain: String)
+    //        {
+    //            UserDefaults.standard.set(username, forKey: "username")
+    //            UserDefaults.standard.set(password, forKey: "password")
+    //            UserDefaults.standard.set(domain, forKey: "domain")
+    //            //Navigate to the next page
+    //            navigateToNextPage()
+    //        }
     //MARK: - Login Alert
     func alert(message: String)
     {
@@ -152,49 +151,61 @@ class ViewController: UIViewController,RegistrationStateDelegate
         present(alert,animated: true,completion: nil)
     }
     func showAlert(message: String) {
-            let alert = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            present(alert, animated: true, completion: nil)
-        }
+        let alert = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
     
-    func registrationStateChanged(message: String, state: RegistrationState)
+    func cleardata()
     {
-        registrationStateDelegate?.registrationStateChanged(message: message, state: state)
-
+        // Clear text fields
+        usernameTextField.text = ""
+        passwordTextField.text = ""
+        domainTextField.text = ""
+    
+        // Reset segment control selection
+        transportSegmentedControl.selectedSegmentIndex = -1
+    }
+    //MARK: - Registration state
+    
+    func registrationStateChanged(message: String, state: RegistrationState) {
         DispatchQueue.main.async { [weak self] in
-            self?.lbl.text = message
+            guard let self = self else { return }
+            self.lbl.text = message
+            print("juneday", message)
             
-            //self?.lbl.text = "Status: \(state), Message: \(message)"
+            if !self.isRegistrationStateHandled 
+            {
+                if message == "Registration successful" 
+                {
+                    self.navigateToNextPage()
+                    print("Mayday Registration successful")
+                    self.isRegistrationStateHandled = true
+                } 
+                else if message == "Registration in progress"
+                {
+                    print("Mayday Registration in progress")
+                }
+                else if message == "io error"
+                {
+                    print("io error")
+                    self.showAlert(message: "An I/O error occurred. Please check the credentials and try again.")
+                    cleardata()
+                    self.isRegistrationStateHandled = true
+                }
+                else if message == "Unauthorized"
+                {
+                    print("Mayday Unauthorized")
+                    self.isRegistrationStateHandled = true
+                    cleardata()
+                }
+                else
+                {
+                    self.showAlert(message: "Registration failed. Please check your credentials and try again.")
+                    cleardata()
+                    self.isRegistrationStateHandled = true
+                }
+            }
         }
-//        // Check if registration is successful
-//                if message.contains("Registration successful") {
-//                    // Navigate to next page
-//                    self.navigateToNextPage()
-//                }
-//        else
-//        {
-//                    // Show alert message
-//                    self.showAlert(message: "Registration failed. Please try again.")
-//                }
-        print("LokeshE2 \(message), state: \(state)")
-
     }
-    
-    
-    @IBAction func AfterRegister(_ sender: UIButton)
-    {
-        if lbl.text == "Registration successful"
-        {
-            print("mypc ok")
-            navigateToNextPage()
-        }
-        else
-        {
-            print("mypc no ok")
-        }
-    }
-    
-    
-
 }
-

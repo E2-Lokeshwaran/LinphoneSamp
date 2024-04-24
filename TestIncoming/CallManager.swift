@@ -46,6 +46,7 @@ class CallManager {
     var username: String = ""
     var passwd: String = ""
     var domain: String = ""
+    
     var loggedIn: Bool = false
     var transportType: String = "TLS"
     
@@ -55,6 +56,7 @@ class CallManager {
     var isCallRunning: Bool = true
     var canChangeCamera: Bool = false
     var remoteAddress: String = ""
+    
     
     
     //Incoming call related variables
@@ -70,6 +72,8 @@ class CallManager {
     //Property to store call duration
     var callDuration: TimeInterval = 0
     
+    static let shared = CallManager()
+    
     //Method to update the call duration
     func updateCallDuration(duration: TimeInterval)
     {
@@ -82,98 +86,155 @@ class CallManager {
     {
         return callDuration
     }
+    // Flag to track whether the core has started
+        private var isCoreStarted = false
+  
+//    init()
+//    {
+//        
+//        LoggingService.Instance.logLevel = LogLevel.Debug
+//        
+//        // Create and start the Core
+//        do {
+//            mCore = try Factory.Instance.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
+//            try mCore.start()
+//            
+//            // Set up delegates
+//            mCoreDelegate = CoreDelegateStub(onCallStateChanged: { [self] (core: Core, call: Call, state: Call.State, message: String) in
+//                
+//                print("Call Status --->:", state)
+//                delegate?.callStateDidChange(state: state)
+//                
+//                //abcvalue = Call.state
+//                
+//                print("abc",state)
+//                self.SecondVc?.updateCallStateLabel(state: state)
+//                
+//                // Outgoing call state handling
+//                if (state == .OutgoingInit)
+//                {
+//                    // First state an outgoing call will go through
+//                }
+//                
+//                else if (state == .Connected || state == .StreamsRunning)
+//                {
+//                    // When the call is connected or streams are running
+//                    self.isCallRunning = true
+//                    self.isVideoEnabled = call.currentParams?.videoEnabled ?? false
+//                    self.canChangeCamera = core.videoDevicesList.count > 2
+//                    //print("  call is connecting1")
+//                    print("CallDuration", call.duration)
+//
+//                }
+//                
+//                else if (state == .Released)
+//                {
+//                    // Call state will be released shortly after the End state
+//                    self.isCallRunning = false
+//                    self.canChangeCamera = false
+//                    print("find me sip ad --->",self.remoteAddress)
+//                }
+//                
+//                // Incoming call state handling
+//                if (state == .IncomingReceived)
+//                {
+//                    // When a call is received
+//                    self.isCallIncoming = true
+//                    self.incomingRemoteAddress = call.remoteAddress!.asStringUriOnly()
+//                    print("find me call receiving")
+//                    
+//                }
+//                
+//                else if (state == .Connected || state == .StreamsRunning)
+//                {
+//                    // When a call is over
+//                    self.isCallIncoming = false
+//                    print("find me call connected")
+//                    
+//                }
+//                
+//                else if (state == .Released)
+//                {
+//                    // When a call is over
+//                    self.isCallIncoming = false
+//                    self.incomingRemoteAddress = "Nobody yet"
+//                    print("find me call disconnected")
+//                }
+//                
+//                self.callMsg = message
+//            }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
+//                NSLog("New registration state is \(state) for user id \(String(describing: account.params?.identityAddress?.asString()))\n")
+//                self.loggedIn = (state == .Ok)
+//            })
+//            mCore.addDelegate(delegate: mCoreDelegate)
+//        }
+//        catch
+//        {
+//            print(error.localizedDescription)
+//        }
+//    }
     
-
-    init()
-    {
-        
-        LoggingService.Instance.logLevel = LogLevel.Debug
-        
-        // Create and start the Core
-        do {
-            mCore = try Factory.Instance.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
-            try mCore.start()
-            
-            // Set up delegates
-            mCoreDelegate = CoreDelegateStub(onCallStateChanged: { [self] (core: Core, call: Call, state: Call.State, message: String) in
-                
-                print("Call Status --->:", state)
-                delegate?.callStateDidChange(state: state)
-                
-                //abcvalue = Call.state
-                
-                print("abc",state)
-                self.SecondVc?.updateCallStateLabel(state: state)
-                
-                // Outgoing call state handling
-                if (state == .OutgoingInit)
-                {
-                    // First state an outgoing call will go through
-                }
-                
-                else if (state == .Connected || state == .StreamsRunning)
-                {
-                    // When the call is connected or streams are running
-                    self.isCallRunning = true
-                    self.isVideoEnabled = call.currentParams?.videoEnabled ?? false
-                    self.canChangeCamera = core.videoDevicesList.count > 2
-                    //print("  call is connecting1")
-                    print("CallDuration", call.duration)
-
-                }
-                
-                else if (state == .Released)
-                {
-                    // Call state will be released shortly after the End state
-                    self.isCallRunning = false
-                    self.canChangeCamera = false
-                    print("find me sip ad --->",self.remoteAddress)
-                }
-                
-                // Incoming call state handling
-                if (state == .IncomingReceived)
-                {
-                    // When a call is received
-                    self.isCallIncoming = true
-                    self.incomingRemoteAddress = call.remoteAddress!.asStringUriOnly()
-                    print("find me call receiving")
-                    
-                }
-                
-                else if (state == .Connected || state == .StreamsRunning)
-                {
-                    // When a call is over
-                    self.isCallIncoming = false
-                    print("find me call connected")
-                    
-                }
-                
-                else if (state == .Released)
-                {
-                    // When a call is over
-                    self.isCallIncoming = false
-                    self.incomingRemoteAddress = "Nobody yet"
-                    print("find me call disconnected")
-                }
-                
-                self.callMsg = message
-            }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
-                NSLog("New registration state is \(state) for user id \(String(describing: account.params?.identityAddress?.asString()))\n")
-                self.loggedIn = (state == .Ok)
-            })
-            mCore.addDelegate(delegate: mCoreDelegate)
-            
-
-        }
-        
-        catch
-        {
-            print(error.localizedDescription)
-        }
-        
-    }
+    //New init funciton
+    // Initialization
+       init() {
+           LoggingService.Instance.logLevel = LogLevel.Debug
+           
+           do {
+               mCore = try Factory.Instance.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
+               try mCore.start()
+               
+               // Set up delegates
+               mCoreDelegate = CoreDelegateStub(
+                   onCallStateChanged: { [weak self] (core: Core, call: Call, state: Call.State, message: String) in
+                       self?.handleCallStateChange(core: core, call: call, state: state, message: message)
+                   },
+                   onAccountRegistrationStateChanged: { [weak self] (core: Core, account: Account, state: RegistrationState, message: String) in
+                       self?.handleAccountRegistrationStateChange(core: core, account: account, state: state, message: message)
+                   }
+               )
+               mCore.addDelegate(delegate: mCoreDelegate)
+           } catch {
+               print(error.localizedDescription)
+           }
+       }
+       
+       // Handle call state change
+       private func handleCallStateChange(core: Core, call: Call, state: Call.State, message: String) {
+           callMsg = message
+           
+           switch state {
+           case .OutgoingInit:
+               // First state an outgoing call will go through
+               break
+           case .Connected, .StreamsRunning:
+               // When the call is connected or streams are running
+               isCallRunning = true
+               canChangeCamera = core.videoDevicesList.count > 2
+           case .Released:
+               // Call state will be released shortly after the End state
+               isCallRunning = false
+               canChangeCamera = false
+           case .IncomingReceived:
+               // When a call is received
+               isCallIncoming = true
+               incomingRemoteAddress = call.remoteAddress?.asStringUriOnly() ?? "Nobody yet"
+           default:
+               break
+           }
+           
+           delegate?.callStateDidChange(state: state)
+       }
+       
+       // Handle account registration state change
+       private func handleAccountRegistrationStateChange(core: Core, account: Account, state: RegistrationState, message: String) {
+           NSLog("New registration state is \(state) for user id \(String(describing: account.params?.identityAddress?.asString()))\n")
+           loggedIn = (state == .Ok)
+           registrationStateDelegate?.registrationStateChanged(message: message, state: state)
+       }
+    
     //MARK: - Login
-    func login(completion: @escaping (Bool) -> Void)
+    //func login(completion: @escaping (Bool) -> Void)
+    func login()
     {
         mCoreDelegate = CoreDelegateStub(onAccountRegistrationStateChanged: { [weak self] (core: Core, account: Account, state: RegistrationState, message: String) in
             // Print the registration state and associated message
@@ -187,12 +248,6 @@ class CallManager {
             let xyz = state
             print("msg--->",bcd)
             print("stss--->",xyz)
-            
-            
-            // Call the completion handler with the login success status
-            completion(state == .Ok)
-
-            
         })
         mCore.addDelegate(delegate: mCoreDelegate)
         
@@ -454,6 +509,7 @@ class CallManager {
         self.username = username
         self.passwd = password
         self.domain = domain
+        print("juneday",domain)
     }
     
     

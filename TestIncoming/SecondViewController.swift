@@ -61,6 +61,8 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     
     //Create an instance of CallManager to manage calls
     var callManager = CallManager()
+    
+    var vc = ViewController()
     //Bringing data from page 1 to page 2 (to show the user name eg. 4000)
     var receivedData: String?
     var sipadd: String?
@@ -70,8 +72,9 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     var localVideoView: UIView?
     //Remote video view
     var remoteVideoView: UIView?
-
-//MARK: - ViewWillDisapper
+    
+    
+    //MARK: - ViewWillDisapper
     //ViewWillDisappear func (back button log out)
     //Using this to unregister the user
     override func viewWillDisappear(_ animated: Bool)
@@ -80,18 +83,26 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         if isMovingFromParent
         {
             //Unregister the user
-            callManager.unregister()
-            callManager.delete()
+            //            callManager.unregister()
+            //            callManager.delete()
+            logout()
+            if let viewController = navigationController?.viewControllers.first as? ViewController {
+                viewController.isRegistrationStateHandled = false
+                viewController.shouldResetCallManager = true
+                
+            }
+            //            registrationStateDelegate?.registrationStateChanged(message: "User logged out", state: .LoggedOut)
+            
         }
-        
     }
+    
     //MARK: - ViewDidLoad
     override func viewDidLoad()
     {
         super.viewDidLoad()
         localVideoView = VideoUi
         remoteVideoView = VideoUi2
-        //To show the local video in the UI View(VideoUi view)
+        //the local video in the UI View(VideoUi view)
         callManager.mCore.nativeVideoWindow = localVideoView
         //To show the remote viewo in the UI View(VideoUi2 view)
         callManager.mCore.nativePreviewWindow = remoteVideoView
@@ -122,60 +133,63 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         // Assigning a closure to callManager's callStateDidChange property.
         // This closure will be executed when the call state changes.
         callManager.callStateDidChange = { [weak self] state in
-        // Updating the call state label in the SecondViewController
-        // using the updateCallStateLabel method.
-        self?.updateCallStateLabel(state: state)
+            // Updating the call state label in the SecondViewController
+            // using the updateCallStateLabel method.
+            self?.updateCallStateLabel(state: state)
         }
         //Initially to hide the views
         VideoUi.isHidden = true
         VideoUi2.isHidden = true
         
-        
+        reglbl.isHidden = false
         
     }
-
+    
     //Keyboard disable when touch anywhere
     @objc func dismissKeyboard()
     {
         view.endEditing(true)
     }
-
+    
     //MARK: - Outgoing call
     @IBAction func Call(_ sender: Any)
     {
-        //If outgoing call is performed accept, decline, speaker, mic, vidoe, camera will visible.
+        //If outgoing call is performed accept, decline, speaker, mic, vidoe, camera will be visible.
         SecViewTwo.isHidden = false
         AcceptCall.isHidden = false
         DeclineCall.isHidden = false
-        Speaker.isHidden = false
-        Mic.isHidden = false
-        camera.isHidden = false
-        SwitchCamera.isHidden = false
+        Speaker.isHidden = true
+        Mic.isHidden = true
+        camera.isHidden = true
+        SwitchCamera.isHidden = true
         
+        //NOTE: - This is the problem why i was not able to make the outgoing call first.
         // If there's an ongoing call, terminate it
-        if callManager.isCallRunning
+        //        if callManager.isCallRunning
+        //        {
+        //            callManager.terminateCall()
+        //        }
+        //        else
+        //        {
+        //Start outgoing call
+        //callManager.outgoingCall()
+        //Pass remote address for outgoing call
+        //User types only 4000 eg it converts into "sip:4000@10.10.1.126"
+        if let remote = CallSIP.text
         {
-            callManager.terminateCall()
-        }
-        else
-        {
-            //Start outgoing call
+            let abc = sipadd!
+            let sipNumber = "sip:\(remote)@\(abc)"
+            //let sipNumber = "sip:\(remote)@10.10.1.126"
+            callManager.passremote(remoteAddress: sipNumber)
             callManager.outgoingCall()
-            //Pass remote address for outgoing call
-            //User types only 4000 eg it converts into "sip:4000@10.10.1.126"
-            if let remote = CallSIP.text
-            {
-                let abc = sipadd!
-                let sipNumber = "sip:\(remote)@\(abc)"
-                //let sipNumber = "sip:\(remote)@10.10.1.126"
-                callManager.passremote(remoteAddress: sipNumber)
-                print("sipnumber",sipNumber)
-            }
+            print("sipnumber",sipNumber)
         }
+        //}
         if CallSIP.text == ""
         {
             //if sip adrress is empty alert will shown
             CallAlert(message: "Enter SIP")
+            SecViewTwo.isHidden = true
         }
     }
     
@@ -190,7 +204,6 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         Speaker.isHidden = false
         camera.isHidden = false
         SwitchCamera.isHidden = false
-                
     }
     
     //MARK: - Decline call
@@ -203,9 +216,7 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         //hide call view
         SecViewTwo.isHidden = true
         
-        //hide video views
-        VideoUi.isHidden = true
-        VideoUi2.isHidden = true
+        resetVideoViews()
     }
     
     //MARK: - Speaker toggle
@@ -242,7 +253,7 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
             sender.backgroundColor = .clear
         }
     }
-
+    
     //MARK: - Turn on video button
     @IBAction func camera(_ sender: UIButton)
     {
@@ -284,7 +295,7 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
     }
     
     //MARK: - Enter sip address (Alert)
-        func CallAlert(message: String)
+    func CallAlert(message: String)
     {
         let alert = UIAlertController(title: "Enter SIP", message: "Enter Caller ID", preferredStyle: .alert)
         
@@ -308,6 +319,9 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         case .Idle:
             LoginSts.text = "Idle"
             CallDuration.text = "00:00"
+            //To hide the video views
+            resetVideoViews()
+            resetButtonStates()
             
         case .IncomingReceived:
             LoginSts.text = "Incoming call received"
@@ -332,10 +346,20 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         case .Connected:
             LoginSts.text = "Connected"
             LoginSts.textColor = .green
+            //Show video views when call is connected
+            VideoUi.isHidden = !callManager.isVideoEnabled
+            VideoUi2.isHidden = !callManager.isVideoEnabled
             
         case .StreamsRunning:
             LoginSts.text = "Streams running"
             LoginSts.textColor = .systemGreen
+            //Show video views when call stream are running
+            VideoUi.isHidden = !callManager.isVideoEnabled
+            VideoUi2.isHidden = !callManager.isVideoEnabled
+            Mic.isHidden = false
+            Speaker.isHidden = false
+            camera.isHidden = false
+            SwitchCamera.isHidden = false
             
         case .Pausing:
             LoginSts.text = "Pausing"
@@ -355,6 +379,9 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         case .End:
             LoginSts.text = "Call ended"
             LoginSts.textColor = .red
+            resetButtonStates()
+            //To hide the video views
+            resetVideoViews()
             
         case .Released:
             LoginSts.text = "Call released"
@@ -363,6 +390,9 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
             stopCallTimer()
             localVideoView?.isHidden = true
             remoteVideoView?.isHidden = true
+            resetButtonStates()
+            //To hide the video views
+            resetVideoViews()
             
         default:
             LoginSts.text = "Unknown"
@@ -391,7 +421,7 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         }
     }
     
-    //MARK: - To show the registration state(Registration successful - key)
+    //MARK: - To show registration state
     func registrationStateChanged(message: String, state: RegistrationState)
     {
         //Call the registration state delegate method if available
@@ -401,6 +431,8 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         // Update the UI on the main thread
         DispatchQueue.main.async { [weak self] in
             self?.reglbl.text = "Status: \(state), Message: \(message)"
+            
+            
         }
     }
     
@@ -415,10 +447,10 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         print("findme",CallDuration.text!)
         secondsElapsed += 1
     }
-    func startCallTimer() 
+    func startCallTimer()
     {
         // Only start the timer if it's not already running
-        if timer == nil || !timer!.isValid 
+        if timer == nil || !timer!.isValid
         {
             // Reset elapsed time
             secondsElapsed = 0
@@ -434,5 +466,38 @@ class SecondViewController: UIViewController,CallManagerDelegate, RegistrationSt
         timer = nil
         CallDuration.text = ""
     }
+    
+    func resetButtonStates()
+    {
+        Mic.isSelected = false
+        Speaker.isSelected = false
+        camera.isSelected = false
+        SwitchCamera.isSelected = false
+        Mic.backgroundColor = .clear
+        Speaker.backgroundColor = .clear
+        camera.backgroundColor = .clear
+        SwitchCamera.backgroundColor = .clear
+    }
+    
+    func resetVideoViews()
+    {
+        VideoUi.isHidden = true
+        VideoUi2.isHidden = true
+    }
+    
+    func logout()
+    {
+        // Clear stored credentials
+        UserDefaults.standard.removeObject(forKey: "username")
+        UserDefaults.standard.removeObject(forKey: "password")
+        UserDefaults.standard.removeObject(forKey: "domain")
+        
+        // Reset authentication state
+        callManager.loggedIn = false
+        
+        // Unregister and delete call manager
+        callManager.unregister()
+        callManager.delete()
+        
+    }
 }
-
