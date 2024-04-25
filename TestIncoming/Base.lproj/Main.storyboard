@@ -18,11 +18,11 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CsP-gF-ZGX">
-                                <rect key="frame" x="47" y="274" width="299" height="305"/>
+                                <rect key="frame" x="47" y="235" width="299" height="305"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jbQ-wC-zaa">
-                                        <rect key="frame" x="103" y="227" width="87" height="35"/>
+                                        <rect key="frame" x="103" y="251" width="87" height="35"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="filled" title="Register"/>
@@ -34,22 +34,22 @@
                                         <rect key="frame" x="36" y="46" width="226" height="34"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                        <textInputTraits key="textInputTraits" keyboardType="decimalPad"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="decimalPad" returnKeyType="next"/>
                                     </textField>
                                     <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="kfa-qP-vU4">
                                         <rect key="frame" x="36" y="95" width="226" height="34"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                        <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
+                                        <textInputTraits key="textInputTraits" keyboardType="numberPad" returnKeyType="next"/>
                                     </textField>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="User" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ggd-0o-p2a">
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Extension" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ggd-0o-p2a">
                                         <rect key="frame" x="36" y="146" width="226" height="34"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
                                     </textField>
                                     <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="prE-Q7-ydX">
-                                        <rect key="frame" x="54" y="188" width="185" height="32"/>
+                                        <rect key="frame" x="54" y="209" width="185" height="32"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <segments>
                                             <segment title="TLS"/>
@@ -67,10 +67,10 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4Wx-g7-fZ8">
-                                        <rect key="frame" x="127" y="270" width="72" height="27"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Extension Range from: 4100 to 4110." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sdx-gc-hAe">
+                                        <rect key="frame" x="57" y="188" width="185" height="13"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="10"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
@@ -94,7 +94,6 @@
                         <outlet property="domainTextField" destination="dyA-wM-jPJ" id="6QV-xF-Iun"/>
                         <outlet property="lbl" destination="3N3-9g-xGR" id="AQK-Zp-btL"/>
                         <outlet property="loginButton" destination="jbQ-wC-zaa" id="6iM-Gs-nUu"/>
-                        <outlet property="loginStatusLabel" destination="4Wx-g7-fZ8" id="iI5-eo-Kqi"/>
                         <outlet property="passwordTextField" destination="kfa-qP-vU4" id="L81-hc-Z6G"/>
                         <outlet property="transportSegmentedControl" destination="prE-Q7-ydX" id="F98-xo-VLy"/>
                         <outlet property="usernameTextField" destination="ggd-0o-p2a" id="bZc-sM-Wk3"/>

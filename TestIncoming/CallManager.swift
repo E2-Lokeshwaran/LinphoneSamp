@@ -14,73 +14,54 @@ protocol CallManagerDelegate: AnyObject
 {
     func callStateDidChange(state: Call.State)
 }
-
 //Registeration state
 protocol RegistrationStateDelegate: AnyObject 
 {
     func registrationStateChanged(message: String, state: RegistrationState)
 }
-
 class CallManager {
-    
-    //Registration sate
-    weak var registrationStateDelegate: RegistrationStateDelegate?
-    
-    weak var SecondVc : SecondViewController?
-    weak var delegate: CallManagerDelegate?
-    weak var vc : ViewController?
-    
-    //call state
-    var callStateDidChange: ((Call.State) -> Void)?
-    
-    //for speaker toggle
-    let audioSession = AVAudioSession.sharedInstance()
-    
     
     var mCore: Core!
     var call: Call?
     var mAccount: Account?
     var mCoreDelegate: CoreDelegate!
-    
     //Login page cred
     var username: String = ""
     var passwd: String = ""
     var domain: String = ""
-    
     var loggedIn: Bool = false
     var transportType: String = "TLS"
-    
-    
     //Outgoing call related variables
     var callMsg: String = ""
     var isCallRunning: Bool = true
     var canChangeCamera: Bool = false
     var remoteAddress: String = ""
-    
-    
-    
     //Incoming call related variables
     var isCallIncoming: Bool = false
     var isSpeakerEnabled: Bool = false
     var isMicrophoneEnabled: Bool = false
     var incomingCallMsg: String = ""
     var incomingRemoteAddress: String = "Nobody yet"
-    
     //Video call variables
     var isVideoEnabled: Bool = false
-    
     //Property to store call duration
     var callDuration: TimeInterval = 0
-    
+    // Singleton pattern: Static property to access the shared instance of CallManager.
     static let shared = CallManager()
-    
+    //Registration sate
+    weak var registrationStateDelegate: RegistrationStateDelegate?
+    weak var SecondVc : SecondViewController?
+    weak var delegate: CallManagerDelegate?
+    weak var vc : ViewController?
+    //call state
+    var callStateDidChange: ((Call.State) -> Void)?
+    //for speaker toggle
+    let audioSession = AVAudioSession.sharedInstance()
     //Method to update the call duration
     func updateCallDuration(duration: TimeInterval)
     {
         callDuration = duration
     }
-    
-    
     //Method to retrieve the call duration
     func getCallDuration() -> TimeInterval
     {
@@ -89,7 +70,7 @@ class CallManager {
     // Flag to track whether the core has started
         private var isCoreStarted = false
   
-//    init()
+    //init()
 //    {
 //        
 //        LoggingService.Instance.logLevel = LogLevel.Debug
@@ -175,25 +156,33 @@ class CallManager {
 //    }
     
     //New init funciton
-    // Initialization
+    // Constructor to initialize the CallManager instance.
        init() {
+           // Set the log level of the LoggingService to Debug.
            LoggingService.Instance.logLevel = LogLevel.Debug
            
            do {
+               // Create the Linphone core instance.
                mCore = try Factory.Instance.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
+               // Start the Linphone core.
                try mCore.start()
-               
-               // Set up delegates
+               // Set up delegates for handling call and account registration state changes.
                mCoreDelegate = CoreDelegateStub(
+                // Call state change delegate.
                    onCallStateChanged: { [weak self] (core: Core, call: Call, state: Call.State, message: String) in
                        self?.handleCallStateChange(core: core, call: call, state: state, message: message)
                    },
+                   // Account registration state change delegate.
                    onAccountRegistrationStateChanged: { [weak self] (core: Core, account: Account, state: RegistrationState, message: String) in
                        self?.handleAccountRegistrationStateChange(core: core, account: account, state: state, message: message)
                    }
                )
+               // Add the core delegate to the Linphone core.
                mCore.addDelegate(delegate: mCoreDelegate)
-           } catch {
+           } 
+           catch
+           {
+               // Catch and print any errors that occur during initialization.
                print(error.localizedDescription)
            }
        }
@@ -221,10 +210,8 @@ class CallManager {
            default:
                break
            }
-           
            delegate?.callStateDidChange(state: state)
        }
-       
        // Handle account registration state change
        private func handleAccountRegistrationStateChange(core: Core, account: Account, state: RegistrationState, message: String) {
            NSLog("New registration state is \(state) for user id \(String(describing: account.params?.identityAddress?.asString()))\n")
@@ -253,7 +240,7 @@ class CallManager {
         
         //User selecting the type of security layer.
         do {
-            //selection transport layer
+            //Selection transport layer
             var transport: TransportType
             if (transportType == "TLS")
             {
@@ -267,38 +254,31 @@ class CallManager {
             {
                 transport = TransportType.Udp
             }
-            
+            // Create authentication information for the SIP account.
             let authInfo = try Factory.Instance.createAuthInfo(username: username, userid: "", passwd: passwd, ha1: "", realm: "", domain: domain)
-            
+            // Create account parameters for the SIP account.
             let accountParams = try mCore.createAccountParams()
-            
-            
+            // Create the SIP identity address using the username and domain.
             let identity = try Factory.Instance.createAddress(addr: "sip:\(username)@\(domain)")
-            
-            
             try accountParams.setIdentityaddress(newValue: identity)
-            
-            
+            // Create the SIP server address using the domain and set the transport.
             let address = try Factory.Instance.createAddress(addr: "sip:\(domain)")
-            
-            
             try address.setTransport(newValue: transport)
-            
-            
             try accountParams.setServeraddress(newValue: address)
-            
+            // Enable registration for the SIP account.
             accountParams.registerEnabled = true
-            
+            // Create the SIP account using the account parameters.
             mAccount = try mCore.createAccount(params: accountParams)
-            
+            // Add the authentication information to the core.
             mCore.addAuthInfo(info: authInfo)
-            
+            // Add the SIP account to the core.
             try mCore.addAccount(account: mAccount!)
-            
+            // Set the SIP account as the default account in the core.
             mCore.defaultAccount = mAccount
         }
         catch
         {
+            // Print the localized description of the error to the console for debugging purposes.
             print(error.localizedDescription)
         }
     }
@@ -321,7 +301,6 @@ class CallManager {
     }
     
     //MARK: - Delete user
-
     func delete()
     {
         if let account = mCore.defaultAccount
@@ -335,7 +314,6 @@ class CallManager {
         }
     }
     //MARK: - Outgoing call
-    
     func outgoingCall()
     {
         do
@@ -356,7 +334,6 @@ class CallManager {
         }
     }
     //MARK: - Terminate call
-    
     func terminateCall()
     {
         do
@@ -377,7 +354,6 @@ class CallManager {
         }
     }
     //MARK: - Accept call
-    
     func acceptCall()
     {
         do {
@@ -392,7 +368,6 @@ class CallManager {
     }
     
     //MARK: - Mute & Unmute
-    
     func muteMicrophone()
     {
         // The following toggles the microphone, disabling completely / enabling the sound capture
@@ -402,7 +377,6 @@ class CallManager {
     }
     
     //MARK: - Toggle video (on or off video)
-    
     func toggleVideo()
     {
         
@@ -414,13 +388,10 @@ class CallManager {
                 print("No ongoing call")
                 return
             }
-            
             // Create call parameters
             let params = try mCore.createCallParams(call: call)
-            
             // Toggle video status
             params.videoEnabled = !call.currentParams!.videoEnabled
-            
             // Update call parameters
             try call.update(params: params)
         } 
@@ -441,16 +412,13 @@ class CallManager {
     }
     
     //MARK: - Switch camera (front or back camera)
-     
     func toggleCamera()
     {
         do {
             // Get available video devices
             let devices = mCore.videoDevicesList
-            
             // Get current video device
             let currentDevice = mCore.videoDevice
-            
             // Find next available device and switch to it
             if let nextDevice = devices.first(where: { $0 != currentDevice && $0 != "StaticImage: Static picture" })
             {
@@ -464,7 +432,6 @@ class CallManager {
     }
     
     //MARK: - Pause or resume
-    
     func pauseOrResume()
     {
         do {
@@ -484,25 +451,28 @@ class CallManager {
     }
     
     //MARK: - Toggle Speaker
-    
-    //Speaker
     func toggleSpeaker()
     {
         do {
             // Check if the audio session is currently using the speaker
-            if audioSession.currentRoute.outputs.contains(where: { $0.portType == .builtInSpeaker }) {
+            if audioSession.currentRoute.outputs.contains(where: { $0.portType == .builtInSpeaker })
+            {
                 // Switch to the receiver
                 try audioSession.overrideOutputAudioPort(.none)
-            } else {
+            } 
+            else
+            {
                 // Switch to the speaker
                 try audioSession.overrideOutputAudioPort(.speaker)
             }
-        } catch {
+        } 
+        catch
+        {
             print("Error toggling speaker: \(error.localizedDescription)")
         }
     }
     
-    
+    //MARK: - Get data from the user
     //Get the username, password, domain from the user
     func setUserCredentials(username: String, password: String, domain: String)
     {
@@ -511,8 +481,6 @@ class CallManager {
         self.domain = domain
         print("juneday",domain)
     }
-    
-    
     //Get sip address from the user
     func passremote(remoteAddress : String)
     {
